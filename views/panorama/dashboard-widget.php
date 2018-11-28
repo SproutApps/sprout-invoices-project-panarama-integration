@@ -67,6 +67,11 @@ if ( ! empty( $invoices ) ) : ?>
 								<small><time datetime="<?php si_invoice_issue_date( $invoice_id ) ?>"><?php echo date_i18n( apply_filters( 'si_client_dash_date_format', 'M. jS' ), si_get_invoice_issue_date( $invoice_id ) ) ?></time></small>
 							</td>
 							<td>
+								<?php
+								$project_id = PSP_SI::get_psp_project_id_from_si_project_id( $invoice_id ); ?>
+
+								<strong><a href="<?php echo esc_url( get_the_permalink($project_id) ); ?>"><?php echo esc_html( get_the_title($project_id) ); ?></a></strong> - 
+
 								<?php if ( 'temp' !== si_get_invoice_status( $invoice_id ) ) : ?>
 									<a href="<?php echo esc_url( add_query_arg( array( 'dashboard' => 1 ), get_permalink( $invoice_id ) ) )?>"><?php echo get_the_title( $invoice_id ) ?></a>
 								<?php else : ?>
