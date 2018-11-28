@@ -9,6 +9,7 @@ class PSPSI_Project_Panorama_View extends PSP_SI {
 	public static function init() {
 		add_action( 'psp_before_quick_overview', array( __CLASS__, 'widget_dashboard_invoices' ) );
 		add_action( 'psp_head', array( __CLASS__, 'pspsi_frontend_assets' ) );
+		add_action( 'psp_dashboard_after_my_projects', array( __CLASS__, 'widget_panorama_dashboard' ) );
 	}
 
 	public static function pspsi_frontend_assets() {
@@ -18,6 +19,64 @@ class PSPSI_Project_Panorama_View extends PSP_SI {
 		} else {
 			echo '<link rel="stylesheet" type="text/css" id="pspsi-front-css" href="' . PSPSI_URL . '/assets/css/front.css?v=' . PSPSI_VER . '">';
 		}
+
+	}
+
+	public static function widget_panorama_dashboard() {
+
+		// Hack, this is looping not sure why...
+		global $psp_si_dashboard_has_shown;
+
+		if( $psp_si_dashboard_has_shown == true ) {
+			return;
+		}
+
+		$projects = psp_get_all_my_projects();
+
+		$invoices  = array();
+		$estimates = array();
+		$payments  = array();
+
+
+		if( !$projects->have_posts() ) {
+			return false;
+		}
+
+		while( $projects->have_posts() ) {
+
+			$projects->the_post();
+
+			$si_project_id = self::get_si_project_id_from_psp_project_id();
+
+			if ( is_a( $si_project_id, 'WP_Post' ) ) {
+				$si_project_id = $si_project_id->ID;
+			}
+
+			$si_project = SI_Project::get_instance( $si_project_id );
+
+			if ( ! is_a( $si_project, 'SI_Project' ) ) {
+				continue;
+			}
+
+			$invoices   = array_merge( $invoices, $si_project->get_invoices() );
+			$estimates 	= array_merge( $estimates, $si_project->get_estimates() );
+			$payments 	= array_merge( $payments, $si_project->get_payments() );
+
+		}
+
+		if( empty($invoices) && empty($estimates) && empty($payments) ) {
+			return false;
+		}
+
+		if ( $invoices ) {
+			self::load_addon_view( 'panorama/dashboard-widget', array(
+				'invoices' 	=> $invoices,
+				'estimates' => $estimates,
+				'payments' 	=> $payments,
+			), true );
+		}
+
+		$psp_si_dashboard_has_shown = true;
 
 	}
 
